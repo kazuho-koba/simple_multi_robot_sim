@@ -15,7 +15,8 @@ class Robot:
         self.m2p = 3779.52  # scaling from meters to pixels
 
         self.img = pygame.image.load(robotimg)  # skin img path provided in the arguments
-        
+        self.rotated = self.img
+        self.rect = self.rotated.get_rect(center=(self.x, self.y))
 
     def move(self):
         pass
@@ -24,9 +25,21 @@ class Robot:
         pass
 
     def dist(self, point1, point2):
-        pass
+        (x1, y1) = point1
+        (x2, y2) = point2
+        x1 = float(x1)
+        x2 = float(x2)
+        y1 = float(y1)
+        y2 = float(y2)
+
+        # calculation
+        px = (x1 - x2) ** (2)
+        py = (y1 - y2) ** (2)
+        distance = (px + py) ** (0.5)
+        return distance
 
     def draw(self):
+        map.blit(self.rotated, self.rect)
         pass
 
     def trail(self):
@@ -59,12 +72,20 @@ class Envir:
 # initialization
 pygame.init()
 running = True
+iterations = 0
 start = (200, 200)
 dims = (600, 1200)
 environment = Envir(dims)
+robot = Robot(start, r'',
+              width = 80,
+              follow = None)
 
 # animation loop
 while running:
-    for event in pytame.event.get():
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    environment.map.fill(environment.black)
+    pygame.display.update()
+    iterations+=1
