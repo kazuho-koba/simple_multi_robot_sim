@@ -33,14 +33,14 @@ class Robot:
         if self.leader == True:
             if event is not None:
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_KP4:
+                    if event.key == pygame.K_UP:
                         self.u += 0.001 * self.m2p
-                    elif event.key == pygame.K_KP1:
+                    elif event.key == pygame.K_DOWN:
                         self.u -= 0.001 * self.m2p
-                    elif event.key == pygame.K_KP6:
-                        self.w += 0.001 * self.m2p
-                    elif event.key == pygame.K_KP3:
-                        self.w -= 0.001 * self.m2p
+                    elif event.key == pygame.K_RIGHT:
+                        self.w += 0.0001 * self.m2p
+                    elif event.key == pygame.K_LEFT:
+                        self.w -= 0.0001 * self.m2p
         else:
             self.following()
     
@@ -74,9 +74,9 @@ class Robot:
             pygame.draw.line(map, color, 
                              (self.trail_set[i][0], self.trail_set[i][1]),
                              (self.trail_set[i+1][0], self.trail_set[i+1][1]))
-            if self.trail_set.__sizeof__() > 2000:
-                self.trail_set.pop(0)
-            self.trail_set.append(pos)
+        if self.trail_set.__sizeof__() > 2000:
+            self.trail_set.pop(0)
+        self.trail_set.append(pos)
 
 class Envir:
     def __init__(self, dimentions):
@@ -102,11 +102,16 @@ class Envir:
     def robot_frame(self):
         pass
 
+def robot_simulate(Robot, event=None):
+    Robot.move(event=event)
+    Robot.draw(environment.map)
+    Robot.trail((Robot.x, Robot.y), environment.map, environment.yel)
+    
 # initialization area
 skins = [r'fig/robot_green.png',
-         r'fig/robot_red.png'
-         r'fig/robot_blue.png'
-         r'fig/robot_orange.png'
+         r'fig/robot_red.png',
+         r'fig/robot_blue.png',
+         r'fig/robot_orange.png',
          r'fig/robot_purple.png']
 
 pygame.init()
@@ -117,19 +122,36 @@ lasttime = pygame.time.get_ticks()
 start = (200, 200)
 dims = (600, 1200)
 environment = Envir(dims)
-robot = Robot(start, r'fig/robot_green.png',
-              width = 80,
-              follow = None)
+
+# robots----------------
+robots_number = 5
+robots = []
+# leader
+robots.append(Robot(start, skins[0], width=80))
+robots[0].leader = True
+# followers
+for i in range(1, robots_number):
+    robot = Robot((start[0]-i*100, start[1]), skins[i], 80, robots[i-1])
+    robots.append(robot)
 
 # animation loop
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        for robot in robots:
+            if not robot.leader and iterations<1:
+                continue
+            robot_simulate(robot, event)
+    
+    for robot in robots:
+        if not robot.leader and iterations < 1:
+            continue
+        robot_simulate(robot)
 
-    environment.map.fill(environment.black)
-    robot.draw(environment.map)
+    
     pygame.display.update()
+    environment.map.fill(environment.black)
     dt = (pygame.time.get_ticks() - lasttime) / 1000    # seconds
     lasttime = pygame.time.get_ticks()
     iterations+=1
